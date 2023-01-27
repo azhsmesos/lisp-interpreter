@@ -30,17 +30,13 @@ pub fn parse(param: &str) -> Result<Object, ParseError> {
         .rev()
         .collect::<Vec<_>>();
 
-    println!("analyzer: {:?}", analyzer_str);
-
     let parse_list = parse_list(&mut analyzer_str)?;
-
-    print!("parser: {:?}", parse_list);
     Ok(parse_list)
 }
 
 fn parse_list(analyzer: &mut Vec<Analyzer>) -> Result<Object, ParseError> {
     let token = analyzer.pop();
-    if token != Some(Analyzer::LParen) {
+    if token != Some(Analyzer::LParen) && token != Some(Analyzer::EXIT) {
         return Err(ParseError {
             err: format!("Expected LParen( ( ), found {:?}", token)
         });
@@ -66,6 +62,7 @@ fn parse_list(analyzer: &mut Vec<Analyzer>) -> Result<Object, ParseError> {
             Analyzer::RParen => {
                 return Ok(Object::List(list))
             }
+            _ => return Ok(Object::List(list))
         }
     }
 

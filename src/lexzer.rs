@@ -7,6 +7,7 @@ pub enum Analyzer {
     Symbol(String),
     LParen,
     RParen,
+    EXIT,
 }
 
 impl Display for Analyzer {
@@ -16,6 +17,7 @@ impl Display for Analyzer {
             Analyzer::Symbol(s) => write!(f, "{}", s),
             Analyzer::LParen => write!(f, "("),
             Analyzer::RParen => write!(f, ")"),
+            Analyzer::EXIT => write!(f, "exit"),
         }
     }
 }

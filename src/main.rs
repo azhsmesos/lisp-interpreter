@@ -2,7 +2,6 @@ extern crate core;
 
 use std::cell::RefCell;
 use std::rc::Rc;
-use linefeed::{Interface, ReadResult};
 use crate::evaluator::eval;
 use crate::meta::Meta;
 use crate::object::Object;
@@ -13,23 +12,23 @@ mod object;
 mod evaluator;
 mod meta;
 
-const APPLICATION: &str = "lisp-sh";
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let reader = Interface::new(APPLICATION)?;
-    let mut meta = Rc::new(RefCell::new(Meta::new()));
-    reader.set_prompt(APPLICATION)?;
 
-    while let ReadResult::Input(input) = reader.read_line()? {
+    let mut meta = Rc::new(RefCell::new(Meta::new()));
+
+    loop {
+        let mut input = String::new();
+        let _ = std::io::stdin().read_line(&mut input).unwrap();
         if input.eq("exit") {
+            println!("GOOD BYE!!!");
             break
         }
         let val = eval(input.as_ref(), &mut meta)?;
         match val {
             Object::Void => {},
-            Object::Integer(n) => println!("{}", n),
-            Object::Bool(b) => println!("{}", b),
-            Object::Symbol(s) => println!("{}", s),
+            Object::Integer(n) => println!("res: {}", n),
+            Object::Bool(b) => println!("res: {}", b),
+            Object::Symbol(s) => println!("res: {}", s),
             Object::Lambda(params, body) => {
                 println!("Lamdbda");
                 for param in params {
@@ -43,6 +42,5 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             _ => println!("{}", val),
         }
     }
-    println!("GOOD BYE!!!");
     Ok(())
 }

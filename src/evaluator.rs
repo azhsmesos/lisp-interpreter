@@ -78,7 +78,6 @@ fn eval_function_call(s: &str, list: &Vec<Object>, meta: &mut Rc<RefCell<Meta>>)
 }
 
 fn eval_binary_op(list: &Vec<Object>,  meta: &mut Rc<RefCell<Meta>>) -> Result<Object, String> {
-    println!("len: {}", list.len());
     if list.len() != 3 {
         return Err(format!("invalid number of arguments for infix operator"));
     }
