@@ -1,5 +1,5 @@
 use std::error::Error;
-use std::fmt::{Display, format, Formatter};
+use std::fmt::{Display, Formatter};
 use crate::lexzer::{analyzer, Analyzer};
 use crate::object::Object;
 
@@ -30,9 +30,11 @@ pub fn parse(param: &str) -> Result<Object, ParseError> {
         .rev()
         .collect::<Vec<_>>();
 
-    println!("{:?}", analyzer_str);
+    println!("analyzer: {:?}", analyzer_str);
 
     let parse_list = parse_list(&mut analyzer_str)?;
+
+    print!("parser: {:?}", parse_list);
     Ok(parse_list)
 }
 
@@ -88,6 +90,19 @@ mod tests {
                        Object::Symbol("+".to_string()),
                        Object::Integer(1),
                        Object::Integer(2),
+                   ]));
+    }
+
+    #[test]
+    fn test_parse_analyzer2() {
+        let param = parse("(+ 1 2 3 4)").unwrap();
+        assert_eq!(param,
+                   Object::List(vec![
+                       Object::Symbol("+".to_string()),
+                       Object::Integer(1),
+                       Object::Integer(2),
+                       Object::Integer(3),
+                       Object::Integer(4),
                    ]));
     }
 }
