@@ -15,12 +15,12 @@ pub fn eval(param: &str, meta: &mut Rc<RefCell<Meta>>) -> Result<Object, String>
 
 fn eval_obj(obj: &Object, meta: &mut Rc<RefCell<Meta>>) -> Result<Object, String> {
     match obj {
-        Object::Void => Ok(Object::Void),
-        Object::Integer(n) => Ok(Object::Integer(*n)),
-        Object::Bool(_) => Ok(obj.clone()),
-        Object::Symbol(s) => eval_symbol(s, meta),
-        Object::Lambda(_params, _body) => Ok(Object::Void),
         Object::List(list) => eval_list(list, meta),
+        Object::Void => Ok(Object::Void),
+        Object::Lambda(_params, _body) => Ok(Object::Void),
+        Object::Bool(_) => Ok(obj.clone()),
+        Object::Integer(n) => Ok(Object::Integer(*n)),
+        Object::Symbol(s) => eval_symbol(s, meta),
     }
 }
 
@@ -36,7 +36,7 @@ fn eval_list(list: &Vec<Object>, meta: &mut Rc<RefCell<Meta>>) -> Result<Object,
     let head = &list[0];
     match head {
         Object::Symbol(s) => match s.as_str() {
-            "+" | "-" | "/" | "<" | ">" | "=" | "!=" => {
+            "+" | "-" | "*"| "/" | "<" | ">" | "=" | "!=" => {
                 return eval_binary_op(&list, meta);
             },
             "define" => eval_define(&list, meta),
@@ -58,22 +58,23 @@ fn eval_list(list: &Vec<Object>, meta: &mut Rc<RefCell<Meta>>) -> Result<Object,
     }
 }
 
-fn eval_function_call(s: &str, list: &Vec<Object>, meta: &mut Rc<RefCell<Meta>>) -> Result<Object, String> {
-    let lambda = meta.borrow_mut().get(s);
-    if lambda.is_none() {
-        return Err(format!("unbound symbol: {}", s));
+fn eval_function_call(s: &str, list: &Vec<Object>, env: &mut Rc<RefCell<Meta>>, ) -> Result<Object, String> {
+    let lamdba = env.borrow_mut().get(s);
+    if lamdba.is_none() {
+        return Err(format!("Unbound symbol: {}", s));
     }
-    let func = lambda.unwrap();
-    match func {
+
+    let func = lamdba.unwrap();
+    return match func {
         Object::Lambda(params, body) => {
-            let mut new_meta = Rc::new(RefCell::new(Meta::extend(meta.clone())));
+            let mut new_env = Rc::new(RefCell::new(Meta::extend(env.clone())));
             for (i, param) in params.iter().enumerate() {
-                let val = eval_obj(&list[i + 1], meta)?;
-                new_meta.borrow_mut().set(param, val);
+                let val = eval_obj(&list[i + 1], env)?;
+                new_env.borrow_mut().set(param, val);
             }
-            return eval_obj(&Object::List(body), &mut new_meta);
-        },
-        _ => return Err(format!("not a lambda: {}", s)),
+            eval_obj(&Object::List(body), &mut new_env)
+        }
+        _ => Err(format!("Not a lambda: {}", s)),
     }
 }
 
@@ -179,10 +180,24 @@ mod tests {
                         (* pi (* r r))
                       )";
         let result = eval(program, &mut env).unwrap();
-        println!("res: {:?}", result);
-        // assert_eq!(
-        //     result,
-        //     Object::List(vec![Object::Integer((314 * 10 * 10) as i64)])
-        // );
+        // println!("res: {:?}", result);
+        assert_eq!(
+            result,
+            Object::List(vec![Object::Integer((314 * 10 * 10) as i64)])
+        );
+    }
+
+    #[test]
+    fn test_sqr_function() {
+        let mut env = Rc::new(RefCell::new(Meta::new()));
+        let program = "(
+                        (define sqr (lambda (r) (* r r)))
+                        (sqr 10)
+                       )";
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::List(vec![Object::Integer((10 * 10) as i64)])
+        );
     }
 }
